@@ -1,20 +1,21 @@
 package com.orm.test;
-
-
-import com.alibaba.druid.sql.visitor.functions.Char;
 import com.learn.Demo.Dao.MemberDao;
 import com.learn.Demo.Dao.OrderDao;
 import com.learn.Demo.Member;
 import com.learn.Demo.Order;
-import org.junit.Ignore;
+import com.transaction.TransactionEnabledProxyManager;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.TransactionManager;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import java.math.BigDecimal;
+import javax.annotation.Resource;
+import javax.sql.DataSource;
 import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
@@ -84,4 +85,27 @@ public class OrmTest {
             System.out.println(e);
         }
     }
+
+    @Resource(name="dataSource")
+    private DataSource dataSource;
+    @Test
+    public void transfer(){
+        TransactionEnabledProxyManager transactionEnabledProxyManager = new TransactionEnabledProxyManager(new DataSourceTransactionManager(dataSource));
+        OrderService orderService = new AnnotationOrderService();
+        OrderService proxyOderService = (OrderService)transactionEnabledProxyManager.proxyFor(orderService);
+        proxyOderService.transfer(memberDao,orderDao);
+    }
+
+    public int testFinal(){
+        try {
+            int i  = 1 / 0;
+            return 1;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception("我会不会不抛出？");
+        } finally {
+            return 3;
+        }
+    }
+
 }
